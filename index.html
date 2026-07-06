@@ -1,0 +1,383 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leveraged ETF Bot — Dashboard</title><style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #0b0e14; color: #e6e9ef; padding: 24px; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.sub { color: #8b93a7; font-size: 13px; margin-bottom: 20px; }
+.banner { background: #151a24; border: 1px solid #232a38; border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 20px; display: flex; gap: 28px;
+  flex-wrap: wrap; align-items: center; }
+.banner .item { font-size: 13px; }
+.banner .item b { color: #fff; font-size: 15px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
+  gap: 20px; align-items: start; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.col h3 { font-size: 13px; font-weight: 600; color: #8b93a7;
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.vs { text-align: center; font-size: 11px; color: #4b5366; letter-spacing: 1px; }
+.chip { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+  border: 1px solid #6b7280; margin-left: 6px; vertical-align: middle; }
+.card { background: #151a24; border: 1px solid #232a38; border-radius: 12px;
+  padding: 16px; border-left: 4px solid #6b7280; }
+.card .top { display: flex; justify-content: space-between; align-items: center; }
+.ticker { font-size: 20px; font-weight: 700; }
+.pair { color: #8b93a7; font-size: 12px; text-transform: uppercase;
+  letter-spacing: .5px; }
+.price { font-size: 15px; color: #cbd2e0; margin: 2px 0 10px; }
+.badge { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 20px;
+  color: #0b0e14; }
+.bar-wrap { background: #0b0e14; border-radius: 6px; height: 10px; margin: 12px 0 4px;
+  overflow: hidden; border: 1px solid #232a38; }
+.bar { height: 100%; border-radius: 6px; }
+.bar-label { font-size: 11px; color: #8b93a7; display: flex;
+  justify-content: space-between; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.pill { font-size: 11px; padding: 4px 8px; border-radius: 6px; background: #0b0e14;
+  border: 1px solid #232a38; color: #6b7280; }
+.pill.on { color: #10b981; border-color: #10b981; }
+.pill.gate { color: #f59e0b; border-color: #f59e0b; }
+.pill.gate.off { color: #6b7280; border-color: #232a38; }
+.risk { font-size: 11px; color: #8b93a7; margin-top: 10px; line-height: 1.4; }
+.risk.blocked { color: #ef4444; }
+.foot { color: #6b7280; font-size: 12px; margin-top: 20px; text-align: center; }
+.foot button { background: #1d4ed8; color: #fff; border: none; padding: 10px 20px;
+  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  margin-top: 10px; }
+.foot button:hover { background: #2563eb; }
+.foot button:disabled { background: #374151; cursor: wait; }
+.foot #refreshStatus { margin-left: 12px; font-size: 13px; }
+.rh-auth-btn { display: inline-block; padding: 10px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+  letter-spacing: .3px; transition: filter .15s; white-space: nowrap; }
+.rh-auth-btn:hover { filter: brightness(1.12); }
+.rh-auth-btn.checking { background: #374151; color: #9ca3af; cursor: default; }
+.rh-auth-btn.ok { background: #10b981; color: #0b0e14; }
+.rh-auth-btn.err { background: #ef4444; color: #fff; animation: pulse 1.4s infinite; }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.6); }
+  50%      { box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+}
+.page-header { display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 4px; gap: 16px; flex-wrap: wrap; }
+</style></head>
+<body>
+  <div class="page-header">
+    <h1>Leveraged ETF Mean-Reversion Bot</h1>
+    <button id="rhAuthBtn" class="rh-auth-btn ok" onclick="openAuth()">✅ Robinhood Connected (as of last publish)</button>
+  </div>
+  <div class="sub"><span style="color:#ef4444;font-weight:700">🔴 LIVE</span> (acct ••••6342) · VIX 18.6 live · macro review 2026-06-19T18:30:00+00:00 ⚠️ macro review STALE
+    · dashboard generated 2026-07-24 17:20 ET</div>
+  <div class="banner">
+      <div class="item">Account P&L<br><b>$98.99</b></div>
+      <div class="item">Trades<br><b>5</b>
+        (5W / 0L)</div>
+      <div class="item">Positions<br><b>2 position(s) open</b></div>
+      <div class="item">VIX<br><b>18.6</b> / ceil 28.0</div>
+      <div class="item">Global veto<br><b>🟢 none</b></div>
+      <div class="item">Near buy<br><b>0</b> of 7 legs</div>
+    </div>
+    <h2 style="font-size:16px;margin-bottom:6px;color:#e6e9ef;">
+      📍 Open Positions &amp; Sell Targets
+      <span id="liveTs" style="font-size:11px;color:#4b5366;font-weight:400;margin-left:10px;">fetching live data…</span>
+    </h2>
+    <div id="livePositions" style="min-height:60px;">
+      <div style="color:#6b7280;text-align:center;padding:20px;">⏳ Loading from Robinhood…</div>
+    </div>
+  <div class="grid"><div class="col"><h3>3x Financials <span class="chip" style="color:#10b981;border-color:#10b981">▲ bull-only</span></h3><div class="card" style="border-left-color:#3b82f6">
+      <div class="top">
+        <div><span class="ticker">FAS</span>
+        <div class="pair">financials</div></div>
+        <span class="badge" style="background:#3b82f6">🔵 WATCHING</span>
+      </div>
+      <div class="price">$168.69 &nbsp;·&nbsp; z-score +2.04
+        &nbsp;·&nbsp; RSI2 100</div>
+      <div class="bar-wrap">
+        <div class="bar" style="width:0%;background:#3b82f6"></div>
+      </div>
+      <div class="bar-label"><span>distance to oversold trigger</span>
+        <span>0% (need z &le; -1.0)</span></div>
+      <div class="pills">
+        <span class="pill gate">regime ✓</span>
+        <span class="pill gate off">stretch ✗</span>
+        <span class="pill">momentum ✗</span>
+        <span class="pill on">reversal ✓</span>
+      </div>
+      <div class="risk">🛡 Uptrend intact â€” buy genuine dips only; do NOT go long FAZ. [risk data STALE]</div>
+    </div></div>
+<div class="col"><h3>3x FANG+ <span class="chip" style="color:#10b981;border-color:#10b981">▲ bull-only</span></h3><div class="card" style="border-left-color:#6b7280">
+      <div class="top">
+        <div><span class="ticker">FNGU</span>
+        <div class="pair">fang</div></div>
+        <span class="badge" style="background:#6b7280">⚪ STANDBY (no uptrend)</span>
+      </div>
+      <div class="price">$24.76 &nbsp;·&nbsp; z-score -2.00
+        &nbsp;·&nbsp; RSI2 0</div>
+      <div class="bar-wrap">
+        <div class="bar" style="width:100%;background:#6b7280"></div>
+      </div>
+      <div class="bar-label"><span>distance to oversold trigger</span>
+        <span>100% (need z &le; -1.0)</span></div>
+      <div class="pills">
+        <span class="pill gate off">regime ✗</span>
+        <span class="pill gate">stretch ✓</span>
+        <span class="pill on">momentum ✓</span>
+        <span class="pill">reversal ✗</span>
+      </div>
+      <div class="risk">🛡 Bull-only, but blackout 6/25 around MU. No long FNGD. [risk data STALE]</div>
+    </div></div>
+<div class="col"><h3>3x Russell 2000 <span class="chip" style="color:#10b981;border-color:#10b981">▲ bull-only</span></h3><div class="card" style="border-left-color:#6b7280">
+      <div class="top">
+        <div><span class="ticker">TNA</span>
+        <div class="pair">smallcap</div></div>
+        <span class="badge" style="background:#6b7280">⚪ STANDBY (no uptrend)</span>
+      </div>
+      <div class="price">$67.78 &nbsp;·&nbsp; z-score -0.05
+        &nbsp;·&nbsp; RSI2 0</div>
+      <div class="bar-wrap">
+        <div class="bar" style="width:4%;background:#6b7280"></div>
+      </div>
+      <div class="bar-label"><span>distance to oversold trigger</span>
+        <span>4% (need z &le; -1.2)</span></div>
+      <div class="pills">
+        <span class="pill gate off">regime ✗</span>
+        <span class="pill gate off">stretch ✗</span>
+        <span class="pill on">momentum ✓</span>
+        <span class="pill">reversal ✗</span>
+      </div>
+      <div class="risk">🛡 Bull-only on dips, lower conviction. No long TZA. [risk data STALE]</div>
+    </div></div>
+<div class="col"><h3>3x S&P 500 <span class="chip" style="color:#10b981;border-color:#10b981">▲ bull-only</span></h3><div class="card" style="border-left-color:#6b7280">
+      <div class="top">
+        <div><span class="ticker">SPXL</span>
+        <div class="pair">sp500</div></div>
+        <span class="badge" style="background:#6b7280">⚪ STANDBY (no uptrend)</span>
+      </div>
+      <div class="price">$259.89 &nbsp;·&nbsp; z-score +1.15
+        &nbsp;·&nbsp; RSI2 62</div>
+      <div class="bar-wrap">
+        <div class="bar" style="width:0%;background:#6b7280"></div>
+      </div>
+      <div class="bar-label"><span>distance to oversold trigger</span>
+        <span>0% (need z &le; -0.8)</span></div>
+      <div class="pills">
+        <span class="pill gate off">regime ✗</span>
+        <span class="pill gate off">stretch ✗</span>
+        <span class="pill">momentum ✗</span>
+        <span class="pill on">reversal ✓</span>
+      </div>
+      <div class="risk">🛡 Bull-only. No long SPXS until trend actually breaks. [risk data STALE]</div>
+    </div></div>
+<div class="col"><h3>3x Nasdaq-100 <span class="chip" style="color:#10b981;border-color:#10b981">✅ active</span></h3><div class="card" style="border-left-color:#6b7280">
+      <div class="top">
+        <div><span class="ticker">TQQQ</span>
+        <div class="pair">nasdaq</div></div>
+        <span class="badge" style="background:#6b7280">⚪ STANDBY (no uptrend)</span>
+      </div>
+      <div class="price">$63.87 &nbsp;·&nbsp; z-score +0.68
+        &nbsp;·&nbsp; RSI2 0</div>
+      <div class="bar-wrap">
+        <div class="bar" style="width:0%;background:#6b7280"></div>
+      </div>
+      <div class="bar-label"><span>distance to oversold trigger</span>
+        <span>0% (need z &le; -0.9)</span></div>
+      <div class="pills">
+        <span class="pill gate off">regime ✗</span>
+        <span class="pill gate off">stretch ✗</span>
+        <span class="pill on">momentum ✓</span>
+        <span class="pill">reversal ✗</span>
+      </div>
+      <div class="risk">🛡 No debate recorded yet — sector trades on mechanical signals only. [risk data STALE]</div>
+    </div></div>
+<div class="col"><h3>3x Semiconductors <span class="chip" style="color:#10b981;border-color:#10b981">✅ active</span></h3><div class="card" style="border-left-color:#6b7280">
+      <div class="top">
+        <div><span class="ticker">SOXL</span>
+        <div class="pair">semis</div></div>
+        <span class="badge" style="background:#6b7280">⚪ STANDBY (no uptrend)</span>
+      </div>
+      <div class="price">$135.71 &nbsp;·&nbsp; z-score +0.73
+        &nbsp;·&nbsp; RSI2 0</div>
+      <div class="bar-wrap">
+        <div class="bar" style="width:0%;background:#6b7280"></div>
+      </div>
+      <div class="bar-label"><span>distance to oversold trigger</span>
+        <span>0% (need z &le; -1.2)</span></div>
+      <div class="pills">
+        <span class="pill gate off">regime ✗</span>
+        <span class="pill gate off">stretch ✗</span>
+        <span class="pill on">momentum ✓</span>
+        <span class="pill">reversal ✗</span>
+      </div>
+      <div class="risk">🛡 No debate recorded yet — sector trades on mechanical signals only. [risk data STALE]</div>
+    </div></div>
+<div class="col"><h3>3x Homebuilders <span class="chip" style="color:#10b981;border-color:#10b981">✅ active</span></h3><div class="card" style="border-left-color:#3b82f6">
+      <div class="top">
+        <div><span class="ticker">NAIL</span>
+        <div class="pair">homebuilders</div></div>
+        <span class="badge" style="background:#3b82f6">🔵 WATCHING</span>
+      </div>
+      <div class="price">$40.80 &nbsp;·&nbsp; z-score +2.04
+        &nbsp;·&nbsp; RSI2 100</div>
+      <div class="bar-wrap">
+        <div class="bar" style="width:0%;background:#3b82f6"></div>
+      </div>
+      <div class="bar-label"><span>distance to oversold trigger</span>
+        <span>0% (need z &le; -1.1)</span></div>
+      <div class="pills">
+        <span class="pill gate">regime ✓</span>
+        <span class="pill gate off">stretch ✗</span>
+        <span class="pill">momentum ✗</span>
+        <span class="pill on">reversal ✓</span>
+      </div>
+      <div class="risk">🛡 No debate recorded yet — sector trades on mechanical signals only. [risk data STALE]</div>
+    </div></div></div>
+  <div class="foot">Buy rule: regime gate (uptrend) + stretch (z &le; -k)
+    + at least 1 of (momentum, reversal), then risk-layer clear.
+    <br><br>
+    <span style="color:#8b93a7;font-size:13px;">📡 Static snapshot — auto-updates every 5 min from the bot. Live controls (refresh/auth) are only on the local dashboard.</span>
+  </div>
+  <script>
+  // ── Auth status button ────────────────────────────────────────────────
+  async function checkRhStatus() {
+    const btn = document.getElementById('rhAuthBtn');
+    try {
+      const res = await fetch('/rh_status');
+      const j = await res.json();
+      if (j.status === 'ok') {
+        btn.textContent = '✅ Robinhood Connected';
+        btn.className = 'rh-auth-btn ok';
+      } else {
+        btn.textContent = '🔴 AUTH REQUIRED';
+        btn.className = 'rh-auth-btn err';
+      }
+    } catch(e) {
+      btn.textContent = '⚠ Server Offline';
+      btn.className = 'rh-auth-btn err';
+    }
+  }
+  function openAuth() {
+    alert('Run this in your terminal to re-authenticate Robinhood:\n\n  python broker.py auth\n\nA browser window will open once — log in and return here.');
+  }
+  // Static snapshot: auth status is baked in above at publish time;
+  // live polling is disabled since there's no backend on GitHub Pages.
+
+  // ── Live data from Robinhood (positions + prices) ─────────────────────
+  function fmt(n, dec=2) { return (n==null||isNaN(n)) ? '—' : Number(n).toFixed(dec); }
+  function fmtSign(n, dec=2) {
+    if (n==null||isNaN(n)) return '—';
+    return (n>=0?'+$':'-$') + Math.abs(n).toFixed(dec);
+  }
+  function fmtPct(n) {
+    if (n==null||isNaN(n)) return '—';
+    return (n>=0?'+':'')+Number(n).toFixed(2)+'%';
+  }
+
+  function renderPositions(positions) {
+    const wrap = document.getElementById('livePositions');
+    if (!wrap) return;
+    if (!positions || positions.length === 0) {
+      wrap.innerHTML = '<div style="color:#6b7280;text-align:center;padding:20px;">No active positions — flat</div>';
+      return;
+    }
+    wrap.innerHTML = positions.map(pos => {
+      const pnlColor  = pos.cur_pnl >= 0 ? '#10b981' : '#ef4444';
+      const dayColor  = (!pos.day_chg_pct || pos.day_chg_pct >= 0) ? '#10b981' : '#ef4444';
+      const staleBadge = pos.stale
+        ? '<span style="background:#f59e0b;color:#0b0e14;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700;margin-left:8px">STALE</span>' : '';
+      const rhBadge = pos.on_robinhood
+        ? '<span style="background:#10b981;color:#0b0e14;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700;margin-left:8px">✓ RH</span>'
+        : '<span style="background:#ef4444;color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700;margin-left:8px">⚠ NOT ON RH</span>';
+      return `<div style="background:#0f1923;border:2px solid #10b981;border-radius:12px;padding:18px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:22px;font-weight:700">${pos.ticker}${staleBadge}${rhBadge}</span>
+          <span style="font-size:13px;color:#8b93a7">${pos.pair_name} · T${pos.tranche_num}/4 · day ${pos.days_held}</span>
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+          <div style="font-size:13px;color:#8b93a7">Current<br>
+            <b style="color:#fff;font-size:18px">$${fmt(pos.cur_price)}</b>
+            <span style="font-size:12px;color:${dayColor};margin-left:6px">${fmtPct(pos.day_chg_pct)} today</span>
+          </div>
+          <div style="font-size:13px;color:#8b93a7">Unrealized P&amp;L<br>
+            <b style="color:${pnlColor};font-size:18px">${fmtSign(pos.cur_pnl)}</b>
+          </div>
+          <div style="font-size:13px;color:#8b93a7">Avg Cost<br>
+            <b style="color:#fff;font-size:16px">$${fmt(pos.avg_cost_per_share)}</b>
+          </div>
+          <div style="font-size:13px;color:#8b93a7">Shares<br>
+            <b style="color:#fff;font-size:16px">${pos.shares}</b>
+          </div>
+          <div style="font-size:13px;color:#8b93a7">Invested<br>
+            <b style="color:#fff;font-size:16px">$${fmt(pos.total_cost,0)}</b>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:180px;background:#10b981;color:#0b0e14;border-radius:10px;padding:14px 18px;text-align:center;font-weight:700;">
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.8">GTC SELL TARGET (+3%)</div>
+            <div style="font-size:32px;margin:4px 0;">$${fmt(pos.sell_target)}</div>
+            <div style="font-size:13px;opacity:0.8">${fmtPct(pos.pct_to_sell)} from current price</div>
+          </div>
+          <div style="flex:1;min-width:180px;background:#1c2333;color:#e6e9ef;border:1px solid #374151;border-radius:10px;padding:14px 18px;text-align:center;font-weight:700;">
+            <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;opacity:0.7">NEXT DCA TRIGGER</div>
+            <div style="font-size:32px;margin:4px 0;">${pos.next_dca_price != null ? '$' + fmt(pos.next_dca_price) : '—'}</div>
+            <div style="font-size:13px;opacity:0.7">${pos.dca_maxed ? 'all 4 tranches used — informational only' : fmtPct(pos.pct_to_next_dca) + ' from current price'}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function updateTimestamp(ts) {
+    const el = document.getElementById('liveTs');
+    if (!el || !ts) return;
+    const d = new Date(ts);
+    el.textContent = 'live · ' + d.toLocaleTimeString('en-US',
+      {timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' ET';
+  }
+
+  async function fetchLiveData() {
+    try {
+      const res = await fetch('live_data.json?t=' + Date.now());
+      const j = await res.json();
+      if (j.ok) {
+        renderPositions(j.positions);
+        updateTimestamp(j.timestamp);
+      } else {
+        document.getElementById('livePositions').innerHTML =
+          '<div style="color:#ef4444;padding:16px">⚠ Live data error: ' + (j.error||'unknown') + '</div>';
+      }
+    } catch(e) {
+      // server offline — show message but don't crash
+      document.getElementById('livePositions').innerHTML =
+        '<div style="color:#6b7280;text-align:center;padding:20px;">⚠ Server offline — start server.py to see live data</div>';
+    }
+  }
+
+  fetchLiveData();
+  setInterval(fetchLiveData, 30000);  // refresh every 30 s
+
+  // ── Refresh button ────────────────────────────────────────────────────
+  async function doRefresh() {
+    const btn = document.getElementById('refreshBtn');
+    const st  = document.getElementById('refreshStatus');
+    btn.disabled = true; btn.textContent = '⏳ Fetching...';
+    st.textContent = '';
+    try {
+      const res = await fetch('/refresh', {method:'POST'});
+      const j = await res.json();
+      if (j.all_ok) {
+        st.textContent = '✓ Done'; st.style.color = '#10b981';
+        setTimeout(() => location.reload(), 500);
+      } else {
+        st.textContent = '⚠ Partial fail — check console';
+        st.style.color = '#f59e0b';
+        setTimeout(() => location.reload(), 1000);
+      }
+    } catch(e) {
+      st.textContent = '✗ Server not running (start server.py)';
+      st.style.color = '#ef4444';
+    }
+    btn.disabled = false; btn.textContent = '🔄 REFRESH (fetch quotes + run bot)';
+  }
+  </script>
+</body></html>
