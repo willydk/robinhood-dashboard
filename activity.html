@@ -1,0 +1,371 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bot — Activity History</title><style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #0b0e14; color: #e6e9ef; padding: 24px; }
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.sub { color: #8b93a7; font-size: 13px; margin-bottom: 20px; }
+.banner { background: #151a24; border: 1px solid #232a38; border-radius: 10px;
+  padding: 14px 18px; margin-bottom: 20px; display: flex; gap: 28px;
+  flex-wrap: wrap; align-items: center; }
+.banner .item { font-size: 13px; }
+.banner .item b { color: #fff; font-size: 15px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
+  gap: 20px; align-items: start; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.col h3 { font-size: 13px; font-weight: 600; color: #8b93a7;
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.vs { text-align: center; font-size: 11px; color: #4b5366; letter-spacing: 1px; }
+.chip { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px;
+  border: 1px solid #6b7280; margin-left: 6px; vertical-align: middle; }
+.card { background: #151a24; border: 1px solid #232a38; border-radius: 12px;
+  padding: 16px; border-left: 4px solid #6b7280; }
+.card .top { display: flex; justify-content: space-between; align-items: center; }
+.ticker { font-size: 20px; font-weight: 700; }
+.pair { color: #8b93a7; font-size: 12px; text-transform: uppercase;
+  letter-spacing: .5px; }
+.price { font-size: 15px; color: #cbd2e0; margin: 2px 0 10px; }
+.badge { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 20px;
+  color: #0b0e14; }
+.bar-wrap { background: #0b0e14; border-radius: 6px; height: 10px; margin: 12px 0 4px;
+  overflow: hidden; border: 1px solid #232a38; }
+.bar { height: 100%; border-radius: 6px; }
+.bar-label { font-size: 11px; color: #8b93a7; display: flex;
+  justify-content: space-between; }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.pill { font-size: 11px; padding: 4px 8px; border-radius: 6px; background: #0b0e14;
+  border: 1px solid #232a38; color: #6b7280; }
+.pill.on { color: #10b981; border-color: #10b981; }
+.pill.gate { color: #f59e0b; border-color: #f59e0b; }
+.pill.gate.off { color: #6b7280; border-color: #232a38; }
+.risk { font-size: 11px; color: #8b93a7; margin-top: 10px; line-height: 1.4; }
+.risk.blocked { color: #ef4444; }
+.foot { color: #6b7280; font-size: 12px; margin-top: 20px; text-align: center; }
+.foot button { background: #1d4ed8; color: #fff; border: none; padding: 10px 20px;
+  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  margin-top: 10px; }
+.foot button:hover { background: #2563eb; }
+.foot button:disabled { background: #374151; cursor: wait; }
+.foot #refreshStatus { margin-left: 12px; font-size: 13px; }
+.rh-auth-btn { display: inline-block; padding: 10px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+  letter-spacing: .3px; transition: filter .15s; white-space: nowrap; }
+.rh-auth-btn:hover { filter: brightness(1.12); }
+.rh-auth-btn.checking { background: #374151; color: #9ca3af; cursor: default; }
+.rh-auth-btn.ok { background: #10b981; color: #0b0e14; }
+.rh-auth-btn.err { background: #ef4444; color: #fff; animation: pulse 1.4s infinite; }
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.6); }
+  50%      { box-shadow: 0 0 0 14px rgba(239,68,68,0); }
+}
+.page-header { display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 4px; gap: 16px; flex-wrap: wrap; }
+.nav { display: flex; gap: 8px; margin-bottom: 18px; }
+.nav a { font-size: 13px; font-weight: 600; text-decoration: none; padding: 8px 14px;
+  border-radius: 8px; background: #151a24; border: 1px solid #232a38; color: #8b93a7; }
+.nav a:hover { color: #e6e9ef; border-color: #3b82f6; }
+.nav a.active { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+
+table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:8px; }
+th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.5px;
+  color:#8b93a7; font-weight:600; padding:8px 10px; border-bottom:1px solid #232a38; }
+td { padding:9px 10px; border-bottom:1px solid #1a202b; color:#cbd2e0; }
+tr:hover td { background:#131822; }
+.num { text-align:right; font-variant-numeric:tabular-nums; }
+.pos { color:#10b981; font-weight:600; }
+.neg { color:#ef4444; font-weight:600; }
+/* dashboard's ".banner .item b" is more specific than a bare ".pos", so the
+   banner figures would render white without these. */
+.banner .item b.pos { color:#10b981; }
+.banner .item b.neg { color:#ef4444; }
+.tick { font-weight:700; color:#fff; }
+.sect { font-size:16px; font-weight:600; margin:26px 0 10px; }
+.wrap { background:#151a24; border:1px solid #232a38; border-radius:12px;
+  padding:6px 14px 14px; overflow-x:auto; }
+.feed { max-height:640px; overflow-y:auto; }
+.ev { display:flex; gap:12px; align-items:flex-start; padding:7px 4px;
+  border-bottom:1px solid #1a202b; font-size:13px; }
+.ev:last-child { border-bottom:none; }
+.ev .ts { color:#4b5366; font-size:11px; white-space:nowrap;
+  font-variant-numeric:tabular-nums; padding-top:2px; }
+.ev .tag { font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px;
+  white-space:nowrap; border:1px solid; }
+.ev .msg { color:#cbd2e0; word-break:break-word; }
+.empty { color:#6b7280; text-align:center; padding:26px; }
+.filters { display:flex; gap:6px; flex-wrap:wrap; margin:0 0 10px; }
+.filters button { font-size:11px; font-weight:600; padding:5px 11px; border-radius:20px;
+  background:#0b0e14; border:1px solid #232a38; color:#8b93a7; cursor:pointer; }
+.filters button:hover { color:#e6e9ef; }
+.filters button.on { background:#1d4ed8; border-color:#1d4ed8; color:#fff; }
+</style></head>
+<body>
+  <h1>Activity History</h1>
+  <div class="sub">every entry, DCA, fill and close the bot has recorded ·
+    generated 2026-09-04 19:50 ET</div>
+  <div class="nav">
+    <a href="index.html">← Dashboard</a>
+    <a href="activity.html" class="active">Activity History</a>
+  </div>
+  <div class="banner">
+          <div class="item">Realised P&amp;L<br>
+            <b class="pos">+$297.98</b></div>
+          <div class="item">Trades<br><b>17</b>
+            (17W / 0L · 100%)</div>
+          <div class="item">Avg / trade<br>
+            <b class="pos">+$17.53</b></div>
+          <div class="item">Return on deployed<br>
+            <b class="pos">+3.09%</b></div>
+          <div class="item">Avg hold<br><b>6.9 days</b></div>
+          <div class="item">Best<br><b class="pos">TQQQ
+            +$50.41</b></div>
+          <div class="item">Worst<br><b class="pos">
+            FAS +$4.90</b></div>
+        </div>
+
+  <div class="sect">📈 By Ticker</div>
+  <div class="wrap"><table>
+      <tr><th>Ticker</th><th class="num">Trades</th><th class="num">Total P&amp;L</th>
+          <th class="num">Avg</th><th class="num">Avg days</th></tr>
+      <tr><td class="tick">TQQQ</td>
+        <td class="num">2</td>
+        <td class="num pos">+$83.46</td>
+        <td class="num">+$41.73</td>
+        <td class="num">15.0</td></tr><tr><td class="tick">SOXL</td>
+        <td class="num">3</td>
+        <td class="num pos">+$70.94</td>
+        <td class="num">+$23.65</td>
+        <td class="num">3.7</td></tr><tr><td class="tick">NAIL</td>
+        <td class="num">4</td>
+        <td class="num pos">+$42.50</td>
+        <td class="num">+$10.63</td>
+        <td class="num">3.0</td></tr><tr><td class="tick">SPXL</td>
+        <td class="num">1</td>
+        <td class="num pos">+$40.38</td>
+        <td class="num">+$40.38</td>
+        <td class="num">18.0</td></tr><tr><td class="tick">FAS</td>
+        <td class="num">4</td>
+        <td class="num pos">+$26.04</td>
+        <td class="num">+$6.51</td>
+        <td class="num">8.5</td></tr><tr><td class="tick">FNGU</td>
+        <td class="num">2</td>
+        <td class="num pos">+$25.78</td>
+        <td class="num">+$12.89</td>
+        <td class="num">3.0</td></tr><tr><td class="tick">TNA</td>
+        <td class="num">1</td>
+        <td class="num pos">+$8.88</td>
+        <td class="num">+$8.88</td>
+        <td class="num">6.0</td></tr></table></div>
+
+  <div class="sect">✅ Completed Trades</div>
+  <div class="wrap"><table>
+      <tr><th>Closed</th><th>Ticker</th><th>Sector</th><th class="num">Entry</th>
+          <th class="num">Exit</th><th class="num">Tr</th><th class="num">Invested</th>
+          <th class="num">Days</th><th class="num">P&amp;L</th><th class="num">Return</th></tr>
+      <tr>
+          <td>2026-09-03</td>
+          <td class="tick">FAS</td>
+          <td>financials</td>
+          <td class="num">$184.22</td>
+          <td class="num">$186.42</td>
+          <td class="num">2</td>
+          <td class="num">$362</td>
+          <td class="num">26</td>
+          <td class="num pos">+$10.86</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-08-19</td>
+          <td class="tick">NAIL</td>
+          <td>homebuilders</td>
+          <td class="num">$42.74</td>
+          <td class="num">$42.54</td>
+          <td class="num">2</td>
+          <td class="num">$578</td>
+          <td class="num">6</td>
+          <td class="num pos">+$17.33</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-08-13</td>
+          <td class="tick">FNGU</td>
+          <td>fang</td>
+          <td class="num">$34.14</td>
+          <td class="num">$34.12</td>
+          <td class="num">2</td>
+          <td class="num">$563</td>
+          <td class="num">4</td>
+          <td class="num pos">+$16.95</td>
+          <td class="num pos">+3.01%</td>
+        </tr><tr>
+          <td>2026-08-13</td>
+          <td class="tick">NAIL</td>
+          <td>homebuilders</td>
+          <td class="num">$41.49</td>
+          <td class="num">$42.73</td>
+          <td class="num">1</td>
+          <td class="num">$290</td>
+          <td class="num">2</td>
+          <td class="num pos">+$8.68</td>
+          <td class="num pos">+2.99%</td>
+        </tr><tr>
+          <td>2026-08-12</td>
+          <td class="tick">TNA</td>
+          <td>smallcap</td>
+          <td class="num">$73.88</td>
+          <td class="num">$76.10</td>
+          <td class="num">1</td>
+          <td class="num">$296</td>
+          <td class="num">6</td>
+          <td class="num pos">+$8.88</td>
+          <td class="num pos">+3.01%</td>
+        </tr><tr>
+          <td>2026-08-06</td>
+          <td class="tick">SOXL</td>
+          <td>semis</td>
+          <td class="num">$135.97</td>
+          <td class="num">$133.95</td>
+          <td class="num">2</td>
+          <td class="num">$520</td>
+          <td class="num">2</td>
+          <td class="num pos">+$15.62</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-08-05</td>
+          <td class="tick">NAIL</td>
+          <td>homebuilders</td>
+          <td class="num">$43.00</td>
+          <td class="num">$44.29</td>
+          <td class="num">1</td>
+          <td class="num">$258</td>
+          <td class="num">2</td>
+          <td class="num pos">+$7.74</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-08-05</td>
+          <td class="tick">FNGU</td>
+          <td>fang</td>
+          <td class="num">$32.79</td>
+          <td class="num">$33.77</td>
+          <td class="num">1</td>
+          <td class="num">$295</td>
+          <td class="num">2</td>
+          <td class="num pos">+$8.83</td>
+          <td class="num pos">+2.99%</td>
+        </tr><tr>
+          <td>2026-08-04</td>
+          <td class="tick">SOXL</td>
+          <td>semis</td>
+          <td class="num">$132.91</td>
+          <td class="num">$136.90</td>
+          <td class="num">1</td>
+          <td class="num">$266</td>
+          <td class="num">1</td>
+          <td class="num pos">+$7.97</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-08-04</td>
+          <td class="tick">FAS</td>
+          <td>financials</td>
+          <td class="num">$177.90</td>
+          <td class="num">$183.24</td>
+          <td class="num">1</td>
+          <td class="num">$178</td>
+          <td class="num">2</td>
+          <td class="num pos">+$5.34</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-08-04</td>
+          <td class="tick">TQQQ</td>
+          <td>nasdaq</td>
+          <td class="num">$76.76</td>
+          <td class="num">$72.18</td>
+          <td class="num">4</td>
+          <td class="num">$1,682</td>
+          <td class="num">22</td>
+          <td class="num pos">+$50.41</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-08-03</td>
+          <td class="tick">SPXL</td>
+          <td>sp500</td>
+          <td class="num">$273.65</td>
+          <td class="num">$272.63</td>
+          <td class="num">3</td>
+          <td class="num">$1,050</td>
+          <td class="num">18</td>
+          <td class="num pos">+$40.38</td>
+          <td class="num pos">+3.85%</td>
+        </tr><tr>
+          <td>2026-07-14</td>
+          <td class="tick">FAS</td>
+          <td>financials</td>
+          <td class="num">$164.71</td>
+          <td class="num">$169.65</td>
+          <td class="num">1</td>
+          <td class="num">$165</td>
+          <td class="num">2</td>
+          <td class="num pos">+$4.94</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-07-13</td>
+          <td class="tick">FAS</td>
+          <td>financials</td>
+          <td class="num">$163.20</td>
+          <td class="num">$168.10</td>
+          <td class="num">1</td>
+          <td class="num">$163</td>
+          <td class="num">4</td>
+          <td class="num pos">+$4.90</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-07-10</td>
+          <td class="tick">NAIL</td>
+          <td>homebuilders</td>
+          <td class="num">$41.63</td>
+          <td class="num">$42.88</td>
+          <td class="num">1</td>
+          <td class="num">$291</td>
+          <td class="num">2</td>
+          <td class="num pos">+$8.75</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-07-09</td>
+          <td class="tick">SOXL</td>
+          <td>semis</td>
+          <td class="num">$225.24</td>
+          <td class="num">$203.13</td>
+          <td class="num">4</td>
+          <td class="num">$1,578</td>
+          <td class="num">8</td>
+          <td class="num pos">+$47.35</td>
+          <td class="num pos">+3.00%</td>
+        </tr><tr>
+          <td>2026-07-09</td>
+          <td class="tick">TQQQ</td>
+          <td>nasdaq</td>
+          <td class="num">$78.27</td>
+          <td class="num">$75.70</td>
+          <td class="num">3</td>
+          <td class="num">$1,102</td>
+          <td class="num">8</td>
+          <td class="num pos">+$33.05</td>
+          <td class="num pos">+3.00%</td>
+        </tr>
+    </table></div>
+
+  <div class="sect">🧾 Event Feed
+    <span style="font-size:12px;color:#6b7280;font-weight:400;">
+      — 38 most recent of 38 (heartbeat lines hidden)</span></div>
+  <div class="filters"><button class="on" data-f="ALL" onclick="filt(this)">ALL</button><button data-f="CLOSE" onclick="filt(this)">CLOSE</button><button data-f="DCA" onclick="filt(this)">DCA</button><button data-f="ENTRY" onclick="filt(this)">ENTRY</button><button data-f="INFO" onclick="filt(this)">INFO</button><button data-f="LIMIT" onclick="filt(this)">LIMIT</button></div>
+  <div class="wrap feed"><div class="ev" data-kind="LIMIT"><span class="ts">09-03 10:15:22</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">🎯 Resting LIMIT SELL FAS: 1sh @ $188.94 (id 6a9980f9)</span></div><div class="ev" data-kind="ENTRY"><span class="ts">09-03 10:15:18</span><span class="tag" style="color:#22c55e;border-color:#22c55e">ENTRY</span><span class="msg">✅ FILLED ENTRY: 1sh FAS @ $183.44</span></div><div class="ev" data-kind="ENTRY"><span class="ts">09-03 10:15:16</span><span class="tag" style="color:#22c55e;border-color:#22c55e">ENTRY</span><span class="msg">💵 BUY ENTRY: 1sh FAS placed (ref afc41a14) — awaiting fill</span></div><div class="ev" data-kind="ENTRY"><span class="ts">09-03 10:15:14</span><span class="tag" style="color:#22c55e;border-color:#22c55e">ENTRY</span><span class="msg">🚀 ENTRY: FAS (financials) z=-1.13 dip=0.54% (floor 0.00%) RSI2=0 regime=✓ stretch=✓ momentum=✓ reversal=✗ | slot 3/3 | risk: Uptrend intact â€” buy genuine dips only; do NOT go long FAZ. [risk data STALE]</span></div><div class="ev" data-kind="CLOSE"><span class="ts">09-03 09:40:12</span><span class="tag" style="color:#10b981;border-color:#10b981">CLOSE</span><span class="msg">📋 PROFIT +3% (limit fill): FAS (financials) P&amp;L: $10.86 | tranches: 2 | avg: $180.99 → $186.42</span></div><div class="ev" data-kind="INFO"><span class="ts">09-02 16:05:14</span><span class="tag" style="color:#6b7280;border-color:#6b7280">INFO</span><span class="msg">WARNING: No price for FAS</span></div><div class="ev" data-kind="INFO"><span class="ts">09-02 16:05:14</span><span class="tag" style="color:#6b7280;border-color:#6b7280">INFO</span><span class="msg">WARNING: No price for TQQQ</span></div><div class="ev" data-kind="INFO"><span class="ts">09-02 16:05:14</span><span class="tag" style="color:#6b7280;border-color:#6b7280">INFO</span><span class="msg">WARNING: No price for TNA</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-31 13:20:21</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">🎯 Resting LIMIT SELL TNA: 16sh @ $72.39 (id 6a95b7d4)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-31 13:20:21</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">📉 DCA #3: +8sh TNA @ $67.84 (~$543) (avg: $70.28, new sell@$72.39, next DCA below $64.79)</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-31 13:20:19</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">↩ Cancelled old limit on TNA (id 6a91ad0f)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-31 13:20:18</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">✅ FILLED DCA #3: 8sh TNA @ $67.84</span></div><div class="ev" data-kind="DCA"><span class="ts">08-31 13:20:16</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">💵 BUY DCA #3: 8sh TNA placed (ref 2e4b911b) — awaiting fill</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-28 11:45:20</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">🎯 Resting LIMIT SELL TNA: 8sh @ $74.91 (id 6a91ad0f)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-28 11:45:20</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">📉 DCA #2: +4sh TNA @ $71.04 (~$284) (avg: $72.72, new sell@$74.91, next DCA below $67.84)</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-28 11:45:18</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">↩ Cancelled old limit on TNA (id 6a85ba75)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-28 11:45:17</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">✅ FILLED DCA #2: 4sh TNA @ $71.04</span></div><div class="ev" data-kind="DCA"><span class="ts">08-28 11:45:15</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">💵 BUY DCA #2: 4sh TNA placed (ref b220a891) — awaiting fill</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-20 14:10:19</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">🎯 Resting LIMIT SELL TQQQ: 15sh @ $74.52 (id 6a87430b)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-20 14:10:19</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">📉 DCA #3: +8sh TQQQ @ $69.95 (~$560) (avg: $72.35, new sell@$74.52, next DCA below $66.80)</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-20 14:10:18</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">↩ Cancelled old limit on TQQQ (id 6a845e6c)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-20 14:10:16</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">✅ FILLED DCA #3: 8sh TQQQ @ $69.95</span></div><div class="ev" data-kind="DCA"><span class="ts">08-20 14:10:15</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">💵 BUY DCA #3: 8sh TQQQ placed (ref d14b45d7) — awaiting fill</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-19 10:15:18</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">🎯 Resting LIMIT SELL TNA: 4sh @ $76.64 (id 6a85ba75)</span></div><div class="ev" data-kind="ENTRY"><span class="ts">08-19 10:15:15</span><span class="tag" style="color:#22c55e;border-color:#22c55e">ENTRY</span><span class="msg">✅ FILLED ENTRY: 4sh TNA @ $74.41</span></div><div class="ev" data-kind="ENTRY"><span class="ts">08-19 10:15:13</span><span class="tag" style="color:#22c55e;border-color:#22c55e">ENTRY</span><span class="msg">💵 BUY ENTRY: 4sh TNA placed (ref c36e8992) — awaiting fill</span></div><div class="ev" data-kind="ENTRY"><span class="ts">08-19 10:15:12</span><span class="tag" style="color:#22c55e;border-color:#22c55e">ENTRY</span><span class="msg">🚀 ENTRY: TNA (smallcap) z=-2.07 dip=0.83% (floor 0.00%) RSI2=0 regime=✓ stretch=✓ momentum=✓ reversal=✗ | slot 3/3 | risk: Bull-only on dips, lower conviction. No long TZA. [risk data STALE]</span></div><div class="ev" data-kind="CLOSE"><span class="ts">08-19 09:35:12</span><span class="tag" style="color:#10b981;border-color:#10b981">CLOSE</span><span class="msg">📋 PROFIT +3% (limit fill): NAIL (homebuilders) P&amp;L: $17.33 | tranches: 2 | avg: $41.30 → $42.54</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-18 09:30:21</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">🎯 Resting LIMIT SELL TQQQ: 7sh @ $77.35 (id 6a845e6c)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-18 09:30:21</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">📉 DCA #2: +4sh TQQQ @ $73.42 (~$294) (avg: $75.10, new sell@$77.35, next DCA below $70.12)</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-18 09:30:19</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">↩ Cancelled old limit on TQQQ (id 6a7e1b49)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-18 09:30:17</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">✅ FILLED DCA #2: 4sh TQQQ @ $73.42</span></div><div class="ev" data-kind="DCA"><span class="ts">08-18 09:30:16</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">💵 BUY DCA #2: 4sh TQQQ placed (ref dec7ef8f) — awaiting fill</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-17 09:45:18</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">🎯 Resting LIMIT SELL NAIL: 14sh @ $42.54 (id 6a83106d)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-17 09:45:18</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">📉 DCA #2: +7sh NAIL @ $39.87 (~$279) (avg: $41.30, new sell@$42.54, next DCA below $37.48)</span></div><div class="ev" data-kind="LIMIT"><span class="ts">08-17 09:45:16</span><span class="tag" style="color:#3b82f6;border-color:#3b82f6">LIMIT</span><span class="msg">↩ Cancelled old limit on NAIL (id 6a7dd87d)</span></div><div class="ev" data-kind="DCA"><span class="ts">08-17 09:45:15</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">✅ FILLED DCA #2: 7sh NAIL @ $39.87</span></div><div class="ev" data-kind="DCA"><span class="ts">08-17 09:45:13</span><span class="tag" style="color:#f59e0b;border-color:#f59e0b">DCA</span><span class="msg">💵 BUY DCA #2: 7sh NAIL placed (ref 3ef32654) — awaiting fill</span></div></div>
+
+  <div class="foot">Display only — this page never places or modifies orders.</div>
+  <script>
+  function filt(btn) {
+    const want = btn.dataset.f;
+    document.querySelectorAll('.filters button').forEach(b =>
+      b.classList.toggle('on', b === btn));
+    document.querySelectorAll('.ev').forEach(el =>
+      el.style.display = (want === 'ALL' || el.dataset.kind === want) ? '' : 'none');
+  }
+  </script>
+</body></html>
